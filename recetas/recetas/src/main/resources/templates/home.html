@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Home - Recetas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            height: 100vh;
+            background-color: #343a40;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #484e53;
+        }
+        .user-info {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .stats-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .jwt-info {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .jwt-token {
+            font-family: monospace;
+            font-size: 0.85em;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .copy-button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <div class="text-center mb-4">
+                    <img src="https://via.placeholder.com/100" class="rounded-circle" alt="logo">
+                    <h4 class="text-white mt-2">Recetas App</h4>
+                </div>
+                <nav>
+                    <a href="#" class="active"><i class="fas fa-home me-2"></i> Inicio</a>
+                    <a href="#"><i class="fas fa-utensils me-2"></i> Mis Recetas</a>
+                    <a href="#"><i class="fas fa-plus me-2"></i> Nueva Receta</a>
+                    <a href="#"><i class="fas fa-users me-2"></i> Comunidad</a>
+                    <a href="#"><i class="fas fa-cog me-2"></i> Configuración</a>
+                    <form th:action="@{/logout}" method="post" class="mt-auto">
+                        <button type="submit" class="btn btn-danger w-100 mt-3">
+                            <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                        </button>
+                    </form>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 content">
+                <div class="user-info">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4>Bienvenido, <span sec:authentication="name"></span>!</h4>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-user-tag me-2"></i>
+                                Rol: <span sec:authentication="principal.authorities"></span>
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge bg-success">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h5><i class="fas fa-book-open text-primary me-2"></i>Mis Recetas</h5>
+                            <h2>0</h2>
+                            <p class="text-muted mb-0">Recetas publicadas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h5><i class="fas fa-heart text-danger me-2"></i>Me gusta</h5>
+                            <h2>0</h2>
+                            <p class="text-muted mb-0">Recetas favoritas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h5><i class="fas fa-comments text-success me-2"></i>Comentarios</h5>
+                            <h2>0</h2>
+                            <p class="text-muted mb-0">En tus recetas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JWT Information Section -->
+                <div class="jwt-info">
+                    <h5><i class="fas fa-key text-warning me-2"></i>Información de Seguridad</h5>
+                    <div class="jwt-token mt-3" th:text="${jwt}"></div>
+                    <button class="btn btn-sm btn-primary copy-button" onclick="copyJWT()">
+                        <i class="fas fa-copy me-2"></i>Copiar Token
+                    </button>
+                    <div class="mt-3" th:if="${decodedJwt}">
+                        <h6>Token Decodificado:</h6>
+                        <pre class="jwt-token" th:text="${decodedJwt}"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyJWT() {
+            const jwtElement = document.querySelector('.jwt-token');
+            const jwt = jwtElement.textContent;
+            
+            navigator.clipboard.writeText(jwt).then(function() {
+                alert('Token copiado al portapapeles');
+            }).catch(function() {
+                alert('Error al copiar el token');
+            });
+        }
+    </script>
+</body>
+</html>
