@@ -82,9 +82,7 @@
                                 <span class="badge bg-primary" th:text="${receta.cocina}">Tipo de cocina</span>
                                 <span class="badge bg-secondary" th:text="${receta.dificultad}">Dificultad</span>
                             </p>
-                            <a th:href="@{'/receta/' + ${receta.id}}" class="btn btn-primary">
-                                <i class="fas fa-eye me-2"></i>Ver Detalles
-                            </a>
+                            <a th:href="@{'/receta/' + ${receta.id}}" class="btn btn-primary">Ver Detalle</a>
                         </div>
                     </div>
                 </div>

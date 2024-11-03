@@ -25,9 +25,9 @@ public class HomeController {
     public String index(Model model) {
         // Página principal pública
         List<Receta> recetasRecientes = Arrays.asList(
-            crearReceta("Pasta Carbonara", "Italiana", "Fácil", "pasta.jpg", true),
-            crearReceta("Sushi Roll", "Japonesa", "Medio", "sushi.jpg", true),
-            crearReceta("Paella", "Española", "Difícil", "paella.jpg", true)
+            crearReceta(1L, "Pasta Carbonara", "Italiana", "Fácil", "pasta.jpg", true),
+            crearReceta(2L, "Sushi Roll", "Japonesa", "Medio", "sushi.jpg", true),
+            crearReceta(3L, "Paella", "Española", "Difícil", "paella.jpg", true)
         );
 
         List<String> banners = Arrays.asList(
@@ -42,7 +42,122 @@ public class HomeController {
         return "index";
     }
 
-    @GetMapping("/home")
+    @GetMapping("/buscar")
+    public String buscarRecetas(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String cocina,
+            @RequestParam(required = false) String ingredientes,
+            @RequestParam(required = false) String pais,
+            @RequestParam(required = false) String dificultad,
+            Model model) {
+        
+        List<Receta> resultados = Arrays.asList(
+            crearReceta(1L, "Pasta Carbonara", "Italiana", "Fácil", "pasta.jpg", false),
+            crearReceta(2L, "Sushi Roll", "Japonesa", "Medio", "sushi.jpg", false),
+            crearReceta(3L, "Paella", "Española", "Difícil", "paella.jpg", false)
+        );
+
+        model.addAttribute("recetas", resultados);
+        return "buscar";
+    }
+
+    @GetMapping("/receta/{id}")
+    public String detalleReceta(@PathVariable Long id, Model model, HttpServletRequest request) {
+        // Simular diferentes recetas según el ID
+        Receta receta;
+        switch (id.intValue()) {
+            case 1:
+                receta = crearDetalleRecetaCarbonara();
+                break;
+            case 2:
+                receta = crearDetalleRecetaSushi();
+                break;
+            case 3:
+                receta = crearDetalleRecetaPaella();
+                break;
+            default:
+                receta = crearDetalleRecetaCarbonara(); // Por defecto
+        }
+        model.addAttribute("receta", receta);
+        return "detalle-receta";
+    }
+
+    private Receta crearReceta(Long id, String nombre, String cocina, String dificultad, String urlImagen, boolean popular) {
+        Receta receta = new Receta();
+        receta.setId(id);
+        receta.setNombre(nombre);
+        receta.setCocina(cocina);
+        receta.setDificultad(dificultad);
+        receta.setUrlImagen(urlImagen);
+        receta.setPopular(popular);
+        return receta;
+    }
+
+    private Receta crearDetalleRecetaCarbonara() {
+        Receta receta = new Receta();
+        receta.setId(1L);
+        receta.setNombre("Pasta Carbonara");
+        receta.setCocina("Italiana");
+        receta.setDificultad("Medio");
+        receta.setTiempoPreparacion("20 minutos");
+        receta.setTiempoCoccion("15 minutos");
+        receta.setIngredientes("Pasta, Huevos, Panceta, Queso Parmesano, Pimienta negra");
+        receta.setInstrucciones("Cocinar la pasta al dente en agua con sal\n" +
+                              "Mientras tanto, batir los huevos con el queso rallado\n" +
+                              "Dorar la panceta en una sartén\n" +
+                              "Mezclar la pasta con la panceta\n" +
+                              "Agregar la mezcla de huevos y queso\n" +
+                              "Servir con pimienta negra recién molida");
+        receta.setUrlImagen("carbonara.jpg");
+        receta.setPopular(true);
+        receta.setPais("Italia");
+        return receta;
+    }
+
+    private Receta crearDetalleRecetaSushi() {
+        Receta receta = new Receta();
+        receta.setId(2L);
+        receta.setNombre("Sushi Roll");
+        receta.setCocina("Japonesa");
+        receta.setDificultad("Medio");
+        receta.setTiempoPreparacion("30 minutos");
+        receta.setTiempoCoccion("10 minutos");
+        receta.setIngredientes("Arroz de sushi, Alga nori, Salmón, Aguacate, Pepino, Vinagre de arroz");
+        receta.setInstrucciones("Preparar el arroz de sushi\n" +
+                              "Colocar el alga nori sobre la esterilla\n" +
+                              "Extender el arroz sobre el alga\n" +
+                              "Colocar los ingredientes\n" +
+                              "Enrollar con la esterilla\n" +
+                              "Cortar en piezas");
+        receta.setUrlImagen("sushi.jpg");
+        receta.setPopular(true);
+        receta.setPais("Japón");
+        return receta;
+    }
+
+    private Receta crearDetalleRecetaPaella() {
+        Receta receta = new Receta();
+        receta.setId(3L);
+        receta.setNombre("Paella Valenciana");
+        receta.setCocina("Española");
+        receta.setDificultad("Difícil");
+        receta.setTiempoPreparacion("45 minutos");
+        receta.setTiempoCoccion("30 minutos");
+        receta.setIngredientes("Arroz bomba, Azafrán, Pollo, Conejo, Judías verdes, Garrofón, Pimentón");
+        receta.setInstrucciones("Sofreír la carne\n" +
+                              "Añadir las verduras\n" +
+                              "Incorporar el pimentón y el tomate\n" +
+                              "Agregar el arroz y el caldo con azafrán\n" +
+                              "Cocinar a fuego fuerte 10 minutos\n" +
+                              "Bajar el fuego y cocinar 8 minutos más\n" +
+                              "Reposar");
+        receta.setUrlImagen("paella.jpg");
+        receta.setPopular(true);
+        receta.setPais("España");
+        return receta;
+    }
+
+   @GetMapping("/home")
     public String home(HttpServletRequest request, Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("username", auth.getName());
@@ -60,62 +175,5 @@ public class HomeController {
         }
         model.addAttribute("jwt", jwt);
         return "home";
-    }
-
-    @GetMapping("/buscar")
-    public String buscarRecetas(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String cocina,
-            @RequestParam(required = false) String ingredientes,
-            @RequestParam(required = false) String pais,
-            @RequestParam(required = false) String dificultad,
-            Model model) {
-        
-        List<Receta> resultados = Arrays.asList(
-            crearReceta("Pasta Carbonara", "Italiana", "Fácil", "pasta.jpg", false),
-            crearReceta("Sushi Roll", "Japonesa", "Medio", "sushi.jpg", false),
-            crearReceta("Paella", "Española", "Difícil", "paella.jpg", false)
-        );
-
-        model.addAttribute("recetas", resultados);
-        return "buscar";
-    }
-
-    @GetMapping("/receta/{id}")
-    public String detalleReceta(@PathVariable Long id, Model model, HttpServletRequest request) {
-        Receta receta = crearDetalleReceta();
-        model.addAttribute("receta", receta);
-        return "detalle-receta";
-    }
-
-    private Receta crearReceta(String nombre, String cocina, String dificultad, String urlImagen, boolean popular) {
-        Receta receta = new Receta();
-        receta.setNombre(nombre);
-        receta.setCocina(cocina);
-        receta.setDificultad(dificultad);
-        receta.setUrlImagen(urlImagen);
-        receta.setPopular(popular);
-        return receta;
-    }
-
-    // Agregamos el método que faltaba
-    private Receta crearDetalleReceta() {
-        Receta receta = new Receta();
-        receta.setNombre("Pasta Carbonara");
-        receta.setCocina("Italiana");
-        receta.setDificultad("Medio");
-        receta.setTiempoPreparacion("20 minutos");
-        receta.setTiempoCoccion("15 minutos");
-        receta.setIngredientes("Pasta, Huevos, Panceta, Queso Parmesano, Pimienta negra");
-        receta.setInstrucciones("1. Cocinar la pasta al dente en agua con sal\n" +
-                              "2. Mientras tanto, batir los huevos con el queso rallado\n" +
-                              "3. Dorar la panceta en una sartén\n" +
-                              "4. Mezclar la pasta con la panceta\n" +
-                              "5. Agregar la mezcla de huevos y queso\n" +
-                              "6. Servir con pimienta negra recién molida");
-        receta.setUrlImagen("carbonara.jpg");
-        receta.setPopular(true);
-        receta.setPais("Italia");
-        return receta;
     }
 }
