@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Buscar Recetas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .search-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .recipe-card {
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+<!-- Include the navbar -->
+<div th:replace="fragments/navbar :: navbar"></div>
+    
+<!-- Rest of your index content -->
+    <div class="container mt-4">
+        <!-- Formulario de búsqueda -->
+        <div class="search-form">
+            <form th:action="@{/search}" method="get">
+                <div class="row g-3">
+                    <div class="col-md">
+                        <input type="text" name="name" class="form-control" placeholder="Nombre de la receta">
+                    </div>
+                    <div class="col-md">
+                        <select name="cuisine" class="form-select">
+                            <option value="">Tipo de cocina</option>
+                            <option>Italiana</option>
+                            <option>Japonesa</option>
+                            <option>Mexicana</option>
+                            <option>Española</option>
+                        </select>
+                    </div>
+                    <div class="col-md">
+                        <input type="text" name="ingredients" class="form-control" placeholder="Ingredientes">
+                    </div>
+                    <div class="col-md">
+                        <select name="country" class="form-select">
+                            <option value="">País de origen</option>
+                            <option>Italia</option>
+                            <option>Japón</option>
+                            <option>México</option>
+                            <option>España</option>
+                        </select>
+                    </div>
+                    <div class="col-md">
+                        <select name="difficulty" class="form-select">
+                            <option value="">Dificultad</option>
+                            <option>Fácil</option>
+                            <option>Medio</option>
+                            <option>Difícil</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resultados de la búsqueda -->
+        <div th:if="${recetas}" class="mt-4">
+            <h3 class="mb-4">Resultados de la búsqueda</h3>
+            <div class="row">
+                <div th:each="receta : ${recetas}" class="col-md-4">
+                    <div class="card recipe-card">
+                        <img th:src="@{'/images/' + ${receta.urlImagen}}" class="card-img-top" alt="Receta">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${receta.nombre}">Nombre de la receta</h5>
+                            <p class="card-text">
+                                <span class="badge bg-primary" th:text="${receta.cocina}">Tipo de cocina</span>
+                                <span class="badge bg-secondary" th:text="${receta.dificultad}">Dificultad</span>
+                            </p>
+                            <a th:href="@{'/receta/' + ${receta.id}}" class="btn btn-primary">
+                                <i class="fas fa-eye me-2"></i>Ver Detalles
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div th:if="${recetas != null and recetas.empty}" class="alert alert-info mt-4">
+            No se encontraron recetas que coincidan con tu búsqueda.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -30,11 +30,24 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/login").anonymous() // Solo usuarios no autenticados
+                // Rutas públicas
+                .requestMatchers(
+                    "/recetas",
+                    "/buscar",
+                    "/",
+                    "/css/**", 
+                    "/js/**", 
+                    "/images/**",
+                    "/fragments/**"  // Permitir acceso a los fragmentos
+                ).permitAll()
+                // Rutas solo para usuarios no autenticados
+                .requestMatchers("/login", "/register").anonymous()
+                // Rutas que requieren autenticación
+                .requestMatchers("/receta/**", "/home").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -52,13 +65,11 @@ public class SecurityConfig {
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exception -> exception
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    // Si un usuario autenticado intenta acceder a /login
                     response.sendRedirect("/home");
                 }));
 
         return http.build();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
