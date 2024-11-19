@@ -1,5 +1,7 @@
 package com.recetas.recetas.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,4 +29,7 @@ public class User {
     
     @Column(name = "role")
     private String role;
+
+    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL)
+    private List<Receta> recetas;
 }

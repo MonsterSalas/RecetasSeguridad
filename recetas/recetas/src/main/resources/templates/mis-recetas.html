@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Mis Recetas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .recipe-card {
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+        .recipe-image {
+            height: 200px;
+            object-fit: cover;
+        }
+        .card-footer {
+            background: transparent;
+            border-top: none;
+        }
+        .stats-badge {
+            font-size: 0.8rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-utensils me-2"></i>Mis Recetas</h2>
+            <a href="/receta/crear" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nueva Receta
+            </a>
+        </div>
+
+        <!-- Estado vacío -->
+        <div th:if="${#lists.isEmpty(misRecetas)}" class="empty-state">
+            <i class="fas fa-book-open mb-3"></i>
+            <h3>Aún no has creado ninguna receta</h3>
+            <p class="text-muted">¡Comienza compartiendo tu primera receta con la comunidad!</p>
+            <a href="/receta/crear" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Crear Mi Primera Receta
+            </a>
+        </div>
+
+        <!-- Grid de recetas -->
+        <div th:if="${not #lists.isEmpty(misRecetas)}" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div th:each="receta : ${misRecetas}" class="col">
+                <div class="card recipe-card h-100">
+                    <!-- Imagen de la receta -->
+                    <div class="position-relative">
+                        <img th:if="${not #lists.isEmpty(receta.medias)}"
+                             th:src="${receta.medias[0].url}"
+                             class="card-img-top recipe-image"
+                             th:alt="${receta.titulo}">
+                        <img th:if="${#lists.isEmpty(receta.medias)}"
+                             src="/images/default-recipe.jpg"
+                             class="card-img-top recipe-image"
+                             alt="Imagen por defecto">
+                        
+                        <!-- Badge de popularidad -->
+                        <span th:if="${receta.popular}"
+                              class="position-absolute top-0 end-0 badge bg-success m-2">
+                            <i class="fas fa-fire me-1"></i>Popular
+                        </span>
+                    </div>
+            
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${receta.titulo}">Título de la Receta</h5>
+                        <p class="card-text text-muted mb-2" 
+                           th:text="${#strings.abbreviate(receta.descripcion, 100)}">
+                           Descripción de la receta...
+                        </p>
+                        
+                        <!-- Estadísticas -->
+                        <div class="d-flex gap-2 mb-3">
+                            <span class="badge bg-light text-dark stats-badge">
+                                <i class="fas fa-star text-warning me-1"></i>
+                                <span th:text="${#numbers.formatDecimal(receta.promedioPuntuacion, 1, 1)}">4.5</span>
+                            </span>
+                            <span class="badge bg-light text-dark stats-badge">
+                                <i class="fas fa-comment text-primary me-1"></i>
+                                <span th:text="${#lists.size(receta.comentarios)}">3</span>
+                            </span>
+                            <span class="badge bg-light text-dark stats-badge">
+                                <i class="fas fa-calendar text-secondary me-1"></i>
+                                <span th:text="${#temporals.format(receta.fechaCreacion, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </span>
+                        </div>
+                    </div>
+            
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a th:href="@{'/receta/' + ${receta.id}}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver Receta
+                            </a>
+                            <div class="btn-group">
+                                <a th:href="@{'/receta/editar/' + ${receta.id}}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-danger btn-sm"
+                                        th:attr="data-recipe-id=${receta.id}"
+                                        onclick="confirmarEliminar(this.getAttribute('data-recipe-id'))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Formulario de comentario -->
+                    <div class="card-footer">
+                        <form th:action="@{'/receta/' + ${receta.id} + '/comentar'}" method="post">
+                            <div class="mb-3">
+                                <label for="contenido" class="form-label">Comentario</label>
+                                <textarea class="form-control" id="contenido" name="contenido" rows="3" required></textarea>
+                            </div>
+                            <input type="hidden" name="username" th:value="${#authentication.name}">
+                            <button type="submit" class="btn btn-primary">Enviar Comentario</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar esta receta? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmarEliminar(recetaId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            const form = document.getElementById('deleteForm');
+            form.action = `/receta/eliminar/${recetaId}`;
+            modal.show();
+        }
+    </script>
+</body>
+</html>

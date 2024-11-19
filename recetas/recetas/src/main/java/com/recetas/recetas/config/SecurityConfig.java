@@ -7,18 +7,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 import com.recetas.recetas.security.CustomAuthenticationSuccessHandler;
 import com.recetas.recetas.security.JwtRequestFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -29,24 +32,42 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        
         http
             .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 // Rutas públicas
                 .requestMatchers(
-                    "/recetas",
-                    "/buscar",
                     "/",
+                    "/index",
+                    "/buscar",
                     "/css/**", 
                     "/js/**", 
                     "/images/**",
-                    "/fragments/**"  // Permitir acceso a los fragmentos
+                    "/fragments/**",
+                    "/uploads/**",
+                    "/error"  // Agregamos la ruta de error
                 ).permitAll()
-                // Rutas solo para usuarios no autenticados
+                
+                // Rutas para usuarios no autenticados
                 .requestMatchers("/login", "/register").anonymous()
+                
                 // Rutas que requieren autenticación
-                .requestMatchers("/receta/**", "/home").authenticated()
+                .requestMatchers(
+                    "/home",
+                    "/crear-receta",           // Agregamos la ruta de crear receta
+                    "/crear-receta/**",        // Para manejar cualquier subruta
+                    "/receta/crear",
+                    "/receta/*/comentar",
+                    "/receta/*/valorar",
+                    "/receta/editar/**",       // Para futuras funcionalidades
+                    "/receta/eliminar/**"      // Para futuras funcionalidades
+                ).authenticated()
+                
+                // Rutas públicas específicas
+                .requestMatchers("/receta/{id}").permitAll()
+                
+                // Cualquier otra ruta requiere autenticación
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -60,13 +81,10 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .deleteCookies("JWT-TOKEN")
-                .permitAll())
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(exception -> exception
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.sendRedirect("/home");
-                }));
-
+                .permitAll()
+            )
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+    
         return http.build();
     }
     @Bean

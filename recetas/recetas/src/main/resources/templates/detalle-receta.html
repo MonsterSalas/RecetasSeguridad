@@ -1,129 +1,189 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <title>Detalle de Receta</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .recipe-header {
-            background-color: #f8f9fa;
-            padding: 2rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
         .recipe-image {
-            width: 100%;
-            height: 300px;
+            max-height: 400px;
             object-fit: cover;
-            border-radius: 8px;
+            width: 100%;
         }
-        .badge-container {
-            margin: 1rem 0;
-        }
-        .badge-custom {
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-            margin-right: 0.5rem;
-        }
-        .recipe-section {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
-        }
-        .time-info {
-            display: flex;
-            gap: 2rem;
-            margin-top: 1rem;
-        }
-        .time-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+
         .ingredients-list {
-            list-style: none;
-            padding: 0;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
         }
-        .ingredients-list li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        .instructions-list {
-            list-style-position: inside;
-            padding-left: 0;
-        }
-        .instructions-list li {
-            padding: 0.5rem 0;
-            line-height: 1.6;
+
+        .instructions {
+            line-height: 1.8;
         }
     </style>
 </head>
-<body class="bg-light">
-    <!-- Incluir el navbar -->
+
+<body>
+    <!-- Navbar -->
     <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-    <div class="container my-4">
-        <!-- Cabecera de la receta -->
-        <div class="recipe-header">
-            <div class="row">
-                <div class="col-md-8">
-                    <h1 th:text="${receta.nombre}">Nombre de la Receta</h1>
-                    <div class="badge-container">
-                        <span class="badge bg-primary badge-custom" th:text="${receta.cocina}">Tipo de Cocina</span>
-                        <span class="badge bg-secondary badge-custom" th:text="${receta.dificultad}">Dificultad</span>
-                        <span class="badge bg-info badge-custom" th:text="${receta.pais}">País</span>
-                    </div>
-                    <div class="time-info">
-                        <div class="time-item">
-                            <i class="fas fa-clock text-primary"></i>
-                            <span th:text="${'Preparación: ' + receta.tiempoPreparacion}"></span>
-                        </div>
-                        <div class="time-item">
-                            <i class="fas fa-fire text-danger"></i>
-                            <span th:text="${'Cocción: ' + receta.tiempoCoccion}"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <img th:src="@{'/images/' + ${receta.urlImagen}}" 
-                         class="recipe-image"
-                         alt="Imagen de la receta">
-                </div>
-            </div>
-        </div>
-
+    <div class="container mt-4">
         <div class="row">
-            <!-- Ingredientes -->
-            <div class="col-md-4">
-                <div class="recipe-section">
-                    <h3><i class="fas fa-list-ul text-primary me-2"></i>Ingredientes</h3>
-                    <ul class="ingredients-list">
-                        <li th:each="ingrediente : ${#strings.arraySplit(receta.ingredientes, ',')}">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <span th:text="${#strings.trim(ingrediente)}"></span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Instrucciones -->
             <div class="col-md-8">
-                <div class="recipe-section">
-                    <h3><i class="fas fa-tasks text-primary me-2"></i>Instrucciones</h3>
-                    <ol class="instructions-list">
-                        <li th:each="paso : ${#strings.arraySplit(receta.instrucciones, '\n')}"
-                            th:text="${#strings.trim(paso)}">
-                        </li>
-                    </ol>
+                <!-- Título y metadata -->
+                <h1 th:text="${receta.titulo}">Título de la Receta</h1>
+                <div class="mb-3">
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        Por <span th:text="${receta.autor != null ? receta.autor.username : 'Anónimo'}"></span>
+                    </span>
+                    <span class="ms-3 text-muted">
+                        <i class="fas fa-calendar me-2"></i>
+                        <span th:text="${#temporals.format(receta.fechaCreacion, 'dd/MM/yyyy')}"></span>
+                    </span>
+                </div>
+
+                <!-- Imágenes -->
+                <div th:if="${receta.medias != null && !receta.medias.empty}" class="mb-4">
+                    <div id="recetaCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <div th:each="media, iterStat : ${receta.medias}"
+                                th:class="${iterStat.first ? 'carousel-item active' : 'carousel-item'}">
+                                <div th:if="${media.tipo == 'IMAGE'}">
+                                    <img th:src="@{${media.url}}" class="d-block w-100 recipe-image"
+                                        th:alt="${receta.titulo}">
+                                </div>
+                                <div th:if="${media.tipo == 'VIDEO'}" class="ratio ratio-16x9">
+                                    <video th:src="@{${media.url}}" controls></video>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#recetaCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#recetaCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="mb-4" th:if="${receta.descripcion}">
+                    <h4>Descripción</h4>
+                    <p th:text="${receta.descripcion}"></p>
+                </div>
+
+                <!-- Ingredientes -->
+                <div class="ingredients-list mb-4">
+                    <h4>Ingredientes</h4>
+                    <div th:utext="${#strings.replace(#strings.escapeXml(receta.ingredientes), '&#10;', '<br/>')}">
+                    </div>
+                </div>
+
+                <!-- Instrucciones -->
+                <div class="instructions mb-4">
+                    <h4>Instrucciones</h4>
+                    <div th:utext="${#strings.replace(#strings.escapeXml(receta.instrucciones), '&#10;', '<br/>')}">
+                    </div>
+                </div>
+
+                <!-- Sección de valoraciones -->
+                <div class="ratings mb-4">
+                    <h4>Valoración</h4>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="h2 mb-0 me-2" th:text="${#numbers.formatDecimal(receta.promedioPuntuacion, 1, 1)}">
+                            4.5</div>
+                        <div class="stars">
+                            <i class="fas fa-star text-warning"></i>
+                            <span class="text-muted"
+                                th:text="${receta.valoraciones != null ? receta.valoraciones.size() : 0} + ' valoraciones'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de valoración -->
+                    <form th:if="${#authorization.expression('isAuthenticated()')}"
+                    th:action="@{'/receta/' + ${receta.id} + '/valorar'}"method="post" class="mb-4">
+                        <select name="puntuacion" class="form-select w-auto">
+                            <option value="1">1 estrella</option>
+                            <option value="2">2 estrellas</option>
+                            <option value="3">3 estrellas</option>
+                            <option value="4">4 estrellas</option>
+                            <option value="5">5 estrellas</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary mt-2">Valorar</button>
+                    </form>
+                </div>
+
+                <!-- Sección de comentarios -->
+                <div class="comments mt-5">
+                    <h4>Comentarios</h4>
+
+                    <!-- Formulario para añadir un comentario -->
+
+                    <div class="card-footer">
+                        <form th:action="@{'/receta/' + ${receta.id} + '/comentar'}" method="post">
+                            <div class="mb-3">
+                                <label for="contenido" class="form-label">Comentario</label>
+                                <textarea class="form-control" id="contenido" name="contenido" rows="3" required></textarea>
+                            </div>
+                            <input type="hidden" name="username" th:value="${#authentication.name}">
+                            <button type="submit" class="btn btn-primary">Enviar Comentario</button>
+                        </form>
+                    </div>                 
+                    <!-- Mensaje si el usuario no está autenticado -->
+                    <div th:if="${!#authorization.expression('isAuthenticated()')}" class="alert alert-warning">
+                        Debes <a th:href="@{/login}">iniciar sesión</a> para dejar un comentario.
+                    </div>
+
+                    <!-- Lista de comentarios -->
+                    <div th:if="${receta.comentarios != null && !receta.comentarios.empty}" class="list-group mt-4">
+                        <div th:each="comentario : ${receta.comentarios}" class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0" th:text="${comentario.autor.username}">Nombre del Usuario</h6>
+                                <small class="text-muted"
+                                    th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                    Fecha del comentario
+                                </small>
+                            </div>
+                            <p class="mb-1" th:text="${comentario.contenido}">Contenido del comentario</p>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje si no hay comentarios -->
+                    <div th:if="${receta.comentarios == null || receta.comentarios.empty}" class="text-muted mt-3">
+                        No hay comentarios aún. ¡Sé el primero en comentar!
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5>Compartir Receta</h5>
+                            <div class="d-flex gap-2">
+                                <a th:href="'https://twitter.com/intent/tweet?text=' + ${receta.titulo} + '&url=' + ${receta.compartirUrl}"
+                                    class="btn btn-outline-primary" target="_blank">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a th:href="'https://www.facebook.com/sharer/sharer.php?u=' + ${receta.compartirUrl}"
+                                    class="btn btn-outline-primary" target="_blank">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                                <button class="btn btn-outline-primary"
+                                    onclick="navigator.clipboard.writeText(window.location.href)">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
