@@ -19,6 +19,7 @@ import com.recetas.recetas.service.UserService;
 public class AdminController {
     @Autowired
     private UserService userService;
+    String users = "redirect:/admin/users";
     
     @GetMapping("/users")
     public String userManagement(Model model) {
@@ -29,18 +30,18 @@ public class AdminController {
     @PostMapping("/users/{id}/edit")
     public String editUser(@PathVariable Long id, @ModelAttribute User user) {
         userService.updateUser(id, user);
-        return "redirect:/admin/users";
+        return users;
     }
     
     @PostMapping("/users/{id}/toggle-status")
     public String toggleStatus(@PathVariable Long id) {
         userService.toggleUserStatus(id);
-        return "redirect:/admin/users";
+        return users;
     }
     
     @PostMapping("/users/{id}/delete")
     public String deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return "redirect:/admin/users";
+        return users;
     }
 }
