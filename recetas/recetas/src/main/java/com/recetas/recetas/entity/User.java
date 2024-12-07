@@ -32,4 +32,7 @@ public class User {
 
     @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL)
     private List<Receta> recetas;
+
+    @Column(name = "suspended")
+    private boolean suspended = false ;
 }

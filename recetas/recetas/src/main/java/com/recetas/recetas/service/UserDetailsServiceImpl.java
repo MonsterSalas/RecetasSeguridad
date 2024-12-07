@@ -23,22 +23,22 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    @Override
+    @Override                                            
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.debug("Intentando autenticar usuario: {}", username);
-        
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    log.debug("Usuario no encontrado: {}", username);
-                    return new UsernameNotFoundException("Usuario no encontrado: " + username);
-                });
-
-        log.debug("Usuario encontrado: {}", username);
-        
+            .orElseThrow(() -> {
+                log.debug("Usuario no encontrado: {}", username);
+                return new UsernameNotFoundException("Usuario no encontrado: " + username);
+            });
+    
+        String role = user.getRole().startsWith("ROLE_") ? 
+                     user.getRole() : 
+                     "ROLE_" + user.getRole();
+    
         return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())))
-                .build();
+            .withUsername(user.getUsername())
+            .password(user.getPassword())
+            .authorities(Collections.singletonList(new SimpleGrantedAuthority(role)))
+            .build();
     }
 }

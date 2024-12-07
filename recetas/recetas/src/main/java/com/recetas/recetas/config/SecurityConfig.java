@@ -63,6 +63,7 @@ public class SecurityConfig {
                     "/receta/editar/**",       // Para futuras funcionalidades
                     "/receta/eliminar/**"      // Para futuras funcionalidades
                 ).authenticated()
+                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 
                 // Rutas públicas específicas
                 .requestMatchers("/receta/{id}").permitAll()

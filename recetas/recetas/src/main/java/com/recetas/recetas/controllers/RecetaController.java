@@ -2,7 +2,9 @@ package com.recetas.recetas.controllers;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -28,6 +30,7 @@ import com.recetas.recetas.repository.ComentarioRepository;
 import com.recetas.recetas.repository.RecetaRepository;
 import com.recetas.recetas.repository.UserRepository;
 import com.recetas.recetas.service.ComentarioService;
+import com.recetas.recetas.service.ContentFilterService;
 import com.recetas.recetas.service.RecetaService;
 import com.recetas.recetas.service.UserService;
 
@@ -50,6 +53,9 @@ public class RecetaController {
 
     @Autowired
     private ComentarioRepository comentarioRepository;
+
+    @Autowired
+    private ContentFilterService contentFilterService;
 
     @GetMapping("/crear")
     public String mostrarFormularioCrear(Model model) {
@@ -131,9 +137,16 @@ public class RecetaController {
     }
 
     @PostMapping("/{id}/comentar")
-    public ResponseEntity<String> comentarReceta(@PathVariable Long id, @RequestParam String contenido, Authentication authentication) {
+    public ResponseEntity<?> comentarReceta(@PathVariable Long id, @RequestParam String contenido, Authentication authentication) {
         String username = authentication.getName();
         Optional<User> optionalUser = userRepository.findByUsername(username);
+        if (contentFilterService.containsOffensiveContent(contenido)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "El comentario contiene contenido inapropiado");
+            response.put("tipo", "CONTENIDO_OFENSIVO");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(404).body("Usuario no encontrado");
         }

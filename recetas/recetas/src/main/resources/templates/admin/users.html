@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .admin-header {
+            background-color: #f8f9fa;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .user-table {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .action-buttons .btn {
+            margin: 0 3px;
+        }
+        .status-badge {
+            padding: 0.5em 1em;
+            border-radius: 20px;
+        }
+        .modal-content {
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include your existing navbar -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-users-cog me-2"></i>Gestión de Usuarios</h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" type="button">
+                        <i class="fas fa-download me-2"></i>Exportar Usuarios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="user-table table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle me-2 text-secondary"></i>
+                                <span th:text="${user.username}"></span>
+                            </div>
+                        </td>
+                        <td th:text="${user.email}"></td>
+                        <td>
+                            <span class="badge bg-primary" th:text="${user.role}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${!user.suspended}" class="badge bg-success status-badge">
+                                <i class="fas fa-check me-1"></i>Activo
+                            </span>
+                            <span th:if="${user.suspended}" class="badge bg-danger status-badge">
+                                <i class="fas fa-ban me-1"></i>Suspendido
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
+                                        th:data-bs-target="'#editModal' + ${user.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" 
+                                        th:onclick="'toggleUserStatus(' + ${user.id} + ')'">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        th:onclick="'deleteUser(' + ${user.id} + ')'">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div th:each="user : ${users}" class="modal fade" th:id="'editModal' + ${user.id}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>Editar Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/users/{id}/edit(id=${user.id})}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" class="form-control" name="username" th:value="${user.username}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" th:value="${user.email}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" name="role">
+                                <option value="USER" th:selected="${user.role == 'USER'}">Usuario</option>
+                                <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleUserStatus(userId) {
+            if (confirm('¿Estás seguro de cambiar el estado de este usuario?')) {
+                fetch(`/admin/users/${userId}/toggle-status`, {
+                    method: 'POST',
+                }).then(() => location.reload());
+            }
+        }
+
+        function deleteUser(userId) {
+            if (confirm('¿Estás seguro de eliminar este usuario?')) {
+                fetch(`/admin/users/${userId}/delete`, {
+                    method: 'POST',
+                }).then(() => location.reload());
+            }
+        }
+    </script>
+</body>
+</html>
